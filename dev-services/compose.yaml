@@ -1,0 +1,13 @@
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v2
+    command: start --user user --pass pass rocksdb:/mydata/mydatabase.db
+    volumes:
+      - ./surrealdb/mydata:/mydata
+    healthcheck:
+      test: ["CMD-SHELL", "surreal", "-V"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 8000:8000
