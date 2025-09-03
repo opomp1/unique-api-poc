@@ -1,6 +1,7 @@
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
-import { borrowingRoutes } from './features/borrowing/borrowing.route';
+import { employeeRoutes } from './features/borrowing/employee.route';
+import { reservationRoutes } from './features/reservation/reservation.route';
 
 const app = new Elysia()
   .use(
@@ -9,7 +10,8 @@ const app = new Elysia()
     })
   )
   .get('/', () => 'Hello Elysia')
-  .use(borrowingRoutes)
+  .use(employeeRoutes)
+  .use(reservationRoutes)
   .listen(3000);
 
 console.log(

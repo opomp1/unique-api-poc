@@ -1,22 +1,23 @@
+/** biome-ignore-all lint/performance/noNamespaceImport: <explanation> */
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import Elysia, { t } from 'elysia';
-import { jsonify, StringRecordId } from 'surrealdb';
+import { StringRecordId } from 'surrealdb';
 // import { v7 as uuidv7 } from 'uuid';
 import { getDb } from '../../lib/database';
-import { BorrowingModel } from './borrowing.schema';
+import * as EmployeeSchema from './employee.schema';
 
-export const borrowingRoutes = new Elysia({
-  prefix: '/borrowing',
-  tags: ['Borrowing'],
+export const employeeRoutes = new Elysia({
+  prefix: '/employee',
+  tags: ['Employee'],
 })
   .get(
     '/',
     async () => {
       const db = await getDb();
       try {
-        const borrowingAll =
-          await db.select<BorrowingModel.BorrowingSchema>('Borrowing');
-        return borrowingAll;
+        const employees =
+          await db.select<EmployeeSchema.EmployeeSchema>('Employee');
+        return employees;
       } catch (error) {
         console.log('fail to get all: ', error);
         return { message: 'Failed to get all' };
@@ -24,29 +25,31 @@ export const borrowingRoutes = new Elysia({
     },
     {
       response: {
-        200: t.Array(BorrowingModel.BorrowingSchema),
+        200: t.Array(EmployeeSchema.EmployeeSchema),
         500: t.Object({
           message: t.String(),
         }),
       },
+      detail: {
+        summary: "Get all employees"
+      }
     }
   )
   .get(
     '/:id',
     async ({ params, set }) => {
       const db = await getDb();
-      console.log('param: ', typeof params.id);
       try {
-        const response = await db.select<BorrowingModel.BorrowingSchema>(
+        const response = await db.select<EmployeeSchema.EmployeeSchema>(
           new StringRecordId(params.id)
         );
         if (!response) {
           set.status = 404;
-          return { message: 'Not found' };
+          return { message: 'Employee Not found' };
         }
         return response;
       } catch (error) {
-        console.log('fail to get by id: ', error);
+        console.log('Fail to get by id: ', error);
         return { message: 'Failed to get all' };
       }
     },
@@ -55,14 +58,17 @@ export const borrowingRoutes = new Elysia({
         id: t.String(),
       }),
       response: {
-        200: BorrowingModel.BorrowingSchema,
-        400: t.Object({
-          message: t.Literal('Not found'),
+        200: EmployeeSchema.EmployeeSchema,
+        404: t.Object({
+          message: t.Literal('Employee Not found'),
         }),
         500: t.Object({
           message: t.String(),
         }),
       },
+      detail: {
+        summary: "Get employee by ID"
+      }
     }
   )
   .post(
@@ -74,29 +80,35 @@ export const borrowingRoutes = new Elysia({
         // id: uuidv7(),
         name: body.name,
         tel: body.tel,
-        car: body.car,
-        pdfUrl: body.pdfUrl,
-        approve: null,
+        department: body.department,
+        section: body.section,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       try {
-        const borrowing = await db.create<BorrowingModel.UpdateBorrowingSchema>(
-          'Borrowing',
+        const employee = await db.create<EmployeeSchema.CreateEmployeeSchema>(
+          'Employee',
           inputDate
         );
-        return jsonify(borrowing);
+        return employee;
       } catch (error) {
         console.error('Failed to create : ', error);
-        return { message: 'Failed to create' };
+        return { message: 'Failed to create', error };
       }
     },
     {
-      body: BorrowingModel.UpdateBorrowingSchema,
+      body: EmployeeSchema.CreateEmployeeSchema,
       response: {
-        201: BorrowingModel.BorrowingSchema,
+        201: EmployeeSchema.EmployeeSchema,
+        500: t.Object({
+          message: t.String(),
+          error: t.Unknown()
+        })
       },
+      detail: {
+        summary: "Create new employee"
+      }
     }
   )
   .put(
@@ -104,63 +116,70 @@ export const borrowingRoutes = new Elysia({
     async ({ params, body, set }) => {
       const db = await getDb();
       try {
-        const prevData = await db.select<BorrowingModel.BorrowingSchema>(
+        const prevData = await db.select<EmployeeSchema.EmployeeSchema>(
           new StringRecordId(params.id)
         );
 
         if (!prevData) {
           set.status = 404;
-          return { message: 'Not found' };
+          return { message: 'Employee not found' };
         }
 
         const inputData = {
           id: prevData.id,
           name: body.name,
           tel: body.tel,
-          car: body.car,
-          approve: body.approve,
-          pdfUrl: body.pdfUrl,
+          department: body.department,
+          section: body.section,
           createdAt: prevData.createdAt || new Date(),
           updatedAt: new Date(),
         };
-        const response = await db.update<BorrowingModel.BorrowingSchema>(
+        const response = await db.update<EmployeeSchema.EmployeeSchema>(
           new StringRecordId(params.id),
           inputData
         );
         return response;
       } catch (error) {
         console.log('Failed to update: ', error);
-        return { message: 'Failed to update' };
+        return { message: 'Failed to update', error };
       }
     },
     {
       params: t.Object({
         id: t.String(),
       }),
-      body: BorrowingModel.UpdateBorrowingSchema,
+      body: EmployeeSchema.CreateEmployeeSchema,
       response: {
-        200: BorrowingModel.BorrowingSchema,
+        200: EmployeeSchema.EmployeeSchema,
         404: t.Object({
-          message: t.String(),
+          message: t.Literal('Employee not found'),
         }),
         500: t.Object({
           message: t.String(),
+          error: t.Optional(t.Any()),
         }),
       },
+      detail: {
+        summary: "Update employee data"
+      }
     }
   )
   .delete(
     '/:id',
-    async ({ params }) => {
+    async ({ params, set }) => {
       const db = await getDb();
       try {
-        const response = await db.delete<BorrowingModel.BorrowingSchema>(
+        const response = await db.delete<EmployeeSchema.EmployeeSchema>(
           new StringRecordId(params.id)
         );
+        if (!response) {
+          set.status = 404;
+          return { message: 'Employee not found' };
+        }
         return response;
       } catch (error) {
         console.log('Failed to delete: ', error);
-        return { message: 'Failed to update' };
+        return { message: 'Failed to update', error };
       }
     },
     {
@@ -168,13 +187,17 @@ export const borrowingRoutes = new Elysia({
         id: t.String(),
       }),
       response: {
-        200: BorrowingModel.BorrowingSchema,
+        200: EmployeeSchema.EmployeeSchema,
         404: t.Object({
-          message: t.String(),
+          message: t.Literal('Employee not found'),
         }),
         500: t.Object({
           message: t.String(),
+          error: t.Unknown(),
         }),
       },
+      detail: {
+        summary: "Delete employee"
+      }
     }
   );
