@@ -2,6 +2,7 @@
 import { t } from 'elysia';
 
 export const ReservationSchema = t.Object({
+  id: t.Unknown(),
   requesterId: t.Unknown(), // relation to employee table
 
   projectName: t.String(), //ขอใชรถจากโครงการ

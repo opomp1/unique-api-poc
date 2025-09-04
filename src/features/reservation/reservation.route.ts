@@ -81,7 +81,8 @@ export const reservationRoutes = new Elysia({
       },
       detail: {
         summary: 'Get reservations with filters',
-        description: 'Get reservations with filter by id, approve and isSelfDrive',
+        description:
+          'Get reservations with filter by id, approve and isSelfDrive',
       },
     }
   )
@@ -160,10 +161,11 @@ export const reservationRoutes = new Elysia({
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        const employee = await db.create<ReservationSchema.ReservationSchema>(
-          'Reservation',
-          inputDate
-        );
+        const employee =
+          await db.create<ReservationSchema.CreateReservationSchema>(
+            'Reservation',
+            inputDate
+          );
         return employee;
       } catch (error) {
         console.error('Failed to create : ', error);
@@ -206,6 +208,7 @@ export const reservationRoutes = new Elysia({
           return { message: 'Reservation not found' };
         }
         const inputDate = {
+          id: prevReservation.id,
           requesterId: prevReservation.requesterId,
           projectName: body.projectName ?? prevReservation.projectName,
           purpose: body.purpose ?? prevReservation.purpose,
@@ -245,7 +248,7 @@ export const reservationRoutes = new Elysia({
       params: t.Object({
         id: t.String(),
       }),
-      body: ReservationSchema.UpdateReservationSchema,
+      body: ReservationSchema.CreateReservationSchema,
       response: {
         200: ReservationSchema.ReservationSchema,
         404: t.Object({
