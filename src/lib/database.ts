@@ -8,9 +8,9 @@ type DbConfig = {
 
 // Define the default database configuration
 const DEFAULT_CONFIG: DbConfig = {
-  url: 'http://127.0.0.1:8000/rpc',
-  namespace: 'unique-poc',
-  database: 'unique-poc',
+  url: Bun.env.DATABASE_URL || 'http://127.0.0.1:8000/rpc',
+  namespace: Bun.env.DATABASE_NAMESPCE || 'unique-poc',
+  database: Bun.env.DATABASE || 'unique-poc',
 };
 
 // Define the function to get the database instance
