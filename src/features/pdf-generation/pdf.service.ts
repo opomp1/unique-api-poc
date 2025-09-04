@@ -14,7 +14,7 @@ import { write } from 'bun';
 import type { InputSchema } from 'elysia';
 
 const font: Font = {
-  sarabun: {
+  Sarabun: {
     data: readFileSync('./src/font/Sarabun/Sarabun-Regular.ttf'),
     fallback: true,
   },
