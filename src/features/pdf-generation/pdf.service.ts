@@ -1,11 +1,17 @@
-import type { Template } from '@pdfme/common';
-import { BLANK_A4_PDF, type Font } from '@pdfme/common';
+/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { Font } from '@pdfme/common';
 import { generate } from '@pdfme/generator';
-import { barcodes, checkbox, image, multiVariableText, text } from '@pdfme/schemas';
+import {
+  barcodes,
+  checkbox,
+  image,
+  multiVariableText,
+  text,
+} from '@pdfme/schemas';
+import { write } from 'bun';
 import type { InputSchema } from 'elysia';
-import { readFileSync } from 'fs';
-
-import { join } from 'path';
 
 const font: Font = {
   sarabun: {
@@ -25,7 +31,6 @@ export async function generateAndSavePDFV2(
   error?: unknown;
 }> {
   try {
-
     const uploadsDir = './uploads/pdfs';
 
     const plugins = {
@@ -33,7 +38,7 @@ export async function generateAndSavePDFV2(
       MultiVariableText: multiVariableText,
       'QR Code': barcodes.qrcode,
       Image: image,
-      Checkbox: checkbox
+      Checkbox: checkbox,
     };
 
     // Convert inputs to strings (PDFme does not except number and maybe more...)
@@ -41,7 +46,6 @@ export async function generateAndSavePDFV2(
       Object.entries(inputs).map(([key, value]) => [
         key,
         value === null || value === undefined ? '' : String(value),
-        console.log(typeof value)
       ])
     );
 
@@ -55,12 +59,12 @@ export async function generateAndSavePDFV2(
 
     // Generate filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const randomString = Math.random().toString(36).substring(2, 10)
+    const randomString = Math.random().toString(36).substring(2, 10);
     const filename = `generated-${timestamp}-${randomString}.pdf`;
     const filePath = join(uploadsDir, filename);
 
     // Save file
-    await Bun.write(filePath, pdf);
+    await write(filePath, pdf);
 
     // Convert to base64 if needed
     // const base64Content = Buffer.from(pdf).toString('base64');

@@ -2,11 +2,7 @@ import { t } from 'elysia';
 
 export const TemplateSchema = t.Object({
   schemas: t.Array(t.Array(t.Record(t.String(), t.Any()))),
-  basePdf: t.Object({
-    width: t.Number(),
-    height: t.Number(),
-    padding: t.Optional(t.Array(t.Number())),
-  }),
+  basePdf: t.Record(t.String(), t.Any()),
   pdfmeVersion: t.Optional(t.String()),
 });
 export type TemplateSchema = typeof TemplateSchema.static;

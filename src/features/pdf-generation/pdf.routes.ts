@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/performance/noNamespaceImport: "" */
+/** biome-ignore-all lint/suspicious/noConsole: "" */
 import Elysia, { t } from 'elysia';
 import * as PdfSchema from './pdf.schema';
 import { generateAndSavePDFV2 } from './pdf.service';
