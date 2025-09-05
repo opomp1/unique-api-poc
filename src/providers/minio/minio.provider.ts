@@ -9,7 +9,7 @@ const minioClient = new Client({
   useSSL: env.MINIO_USE_SSL === 'true',
 });
 
-const bucketName = env.MINIO_BUCKET_NAME || 'pdf-uploads';
+const bucketName = env.MINIO_BUCKET_NAME || 'pdf';
 
 const minioConnectionString = (() => {
   const protocol = env.MINIO_USE_SSL === 'true' ? 'https' : 'http';

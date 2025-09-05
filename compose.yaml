@@ -54,9 +54,9 @@ services:
       /bin/sh -c "
       sleep 5;
       /usr/bin/mc alias set minio http://minio:9000 minio miniosecretkey;
-      /usr/bin/mc mb minio/<bucket name> --ignore-existing;
-      /usr/bin/mc anonymous set download minio/<bucket name>; # set public access readonly
-      echo 'Buckets <bucket name> created successfully';
+      /usr/bin/mc mb minio/pdf --ignore-existing;
+      /usr/bin/mc anonymous set download minio/pdf; # set public access readonly
+      echo 'Buckets pdf created successfully';
       exit 0;
       "
   createkeys:
@@ -67,10 +67,10 @@ services:
       /bin/sh -c "
       sleep 2;
       /usr/bin/mc alias set minio http://minio:9000 minio miniosecretkey;
-      /usr/bin/mc admin user svcacct add minio minio --access-key <your access key> --secret-key <your secret key>;
+      /usr/bin/mc admin user svcacct add minio minio --access-key accesskey --secret-key secretkey;
       echo '=== BACKEND CREDENTIALS ===';
-      echo 'Access Key: <your access key>';
-      echo 'Secret Key: <your secret key>';
+      echo 'Access Key: accesskey';
+      echo 'Secret Key: secretkey';
       echo 'Endpoint: http://localhost:9000';
       echo 'Bucket: uploads';
       echo '==========================';
