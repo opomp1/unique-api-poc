@@ -46,6 +46,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - api
   createbuckets:
     image: minio/mc
     depends_on:
