@@ -8,3 +8,6 @@ temp/
 # Ignore sensitive configuration files
 .env
 config.json
+
+/uploads/pdfs
+/data/minio

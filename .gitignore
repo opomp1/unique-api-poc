@@ -45,3 +45,6 @@ surrealdb
 
 dist
 .env
+
+/uploads/pdfs
+/data/minio

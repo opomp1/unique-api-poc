@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Font } from '@pdfme/common';
 import { generate } from '@pdfme/generator';
 import {
@@ -10,8 +9,8 @@ import {
   multiVariableText,
   text,
 } from '@pdfme/schemas';
-import { write } from 'bun';
 import type { InputSchema } from 'elysia';
+import { uploadPdf } from '../../providers/minio/minio.provider';
 
 const font: Font = {
   Sarabun: {
@@ -19,20 +18,20 @@ const font: Font = {
     fallback: true,
   },
 };
+
 export async function generateAndSavePDFV2(
+  // biome-ignore lint/suspicious/noExplicitAny: Type any for POC for now.
   template: any,
   inputs: InputSchema
 ): Promise<{
   success: boolean;
   filename?: string;
-  filePath?: string;
+  url?: string;
   base64Content?: string;
   size?: number;
   error?: unknown;
 }> {
   try {
-    const uploadsDir = './uploads/pdfs';
-
     const plugins = {
       Text: text,
       MultiVariableText: multiVariableText,
@@ -49,7 +48,6 @@ export async function generateAndSavePDFV2(
       ])
     );
 
-    // Use the template directly as PDFme JSON format
     const pdf = await generate({
       template,
       inputs: [processedInputs],
@@ -57,24 +55,13 @@ export async function generateAndSavePDFV2(
       options: { font },
     });
 
-    // Generate filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const randomString = Math.random().toString(36).substring(2, 10);
-    const filename = `generated-${timestamp}-${randomString}.pdf`;
-    const filePath = join(uploadsDir, filename);
-
-    // Save file
-    await write(filePath, pdf);
-
-    // Convert to base64 if needed
-    // const base64Content = Buffer.from(pdf).toString('base64');
+    const uploadResult = await uploadPdf(Buffer.from(pdf));
 
     return {
       success: true,
-      filename,
-      filePath,
-      // base64Content,
-      // size: pdf.length,
+      filename: uploadResult.filename,
+      url: uploadResult.fileFullPath,
+      size: uploadResult.size,
     };
   } catch (error) {
     console.error('PDF generation error:', error);

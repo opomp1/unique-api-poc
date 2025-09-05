@@ -1,0 +1,84 @@
+services:
+  pdfme-api:
+    image: opomp1/unique-pdfme-api
+    container_name: pdfme-api
+    environment:
+      - DATABSE_URL=http://surrealdb:8000
+      - DATABASE_NAMESPACE=unique-poc
+      - DATABASE=unique-poc
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tunnel
+      - api
+
+
+  surrealdb:
+    image: surrealdb/surrealdb:v2
+    command: start --user user --pass pass rocksdb:/mydata/mydatabase.db
+    volumes:
+      - ./surrealdb/mydata:/mydata
+    healthcheck:
+      test: ["CMD-SHELL", "surreal", "-V"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api
+
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID:-minio}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY:-miniosecretkey}
+    volumes:
+      - ./data/minio:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: [CMD, /usr/bin/mc, ready, local]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set minio http://minio:9000 minio miniosecretkey;
+      /usr/bin/mc mb minio/<bucket name> --ignore-existing;
+      /usr/bin/mc anonymous set download minio/<bucket name>; # set public access readonly
+      echo 'Buckets <bucket name> created successfully';
+      exit 0;
+      "
+  createkeys:
+    image: minio/mc
+    depends_on:
+      - createbuckets
+    entrypoint: >
+      /bin/sh -c "
+      sleep 2;
+      /usr/bin/mc alias set minio http://minio:9000 minio miniosecretkey;
+      /usr/bin/mc admin user svcacct add minio minio --access-key <your access key> --secret-key <your secret key>;
+      echo '=== BACKEND CREDENTIALS ===';
+      echo 'Access Key: <your access key>';
+      echo 'Secret Key: <your secret key>';
+      echo 'Endpoint: http://localhost:9000';
+      echo 'Bucket: uploads';
+      echo '==========================';
+      exit 0;
+      "
+
+
+networks:
+  tunnel:
+    external: true
+  api: 

@@ -12,6 +12,7 @@
     "@pdfme/generator": "^5.4.2",
     "@pdfme/schemas": "^5.4.2",
     "elysia": "latest",
+    "minio": "^8.0.5",
     "surrealdb": "^1.3.2"
   },
   "devDependencies": {

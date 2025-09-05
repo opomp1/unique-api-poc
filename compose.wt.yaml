@@ -1,0 +1,14 @@
+services:
+  watchtower:
+    image: containrrr/watchtower
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true # which service need to allow watchtower to watch new image that service should put the label
+      - WATCHTOWER_POLL_INTERVAL=30 # check new image every 30 seconds
+      - WATCHTOWER_ROLLING_RESTART=true # restart the one was changed image detected and got zero downtime deployment as well
+      - WATCHTOWER_CLEANUP=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    api:
+      labels:
+        - "com.centurylinklabs.watchtower.enable=true"
+      image: opomp1/unique-pdfme-api
