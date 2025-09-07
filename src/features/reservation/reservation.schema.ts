@@ -4,13 +4,14 @@ import { t } from 'elysia';
 export const ReservationSchema = t.Object({
   id: t.Unknown(),
   requesterId: t.Unknown(), // relation to employee table
+  lineUserId: t.String(),
 
-  projectName: t.String(), //ขอใชรถจากโครงการ
-  purpose: t.String(), // วัตถุประสงค์ในการใชรถ้
-  passengerAmount: t.Number(), // จํานวนผู้โดยสาร
+  projectName: t.Optional(t.String()), //ขอใชรถจากโครงการ
+  purpose: t.Optional(t.String()), // วัตถุประสงค์ในการใชรถ้
+  passengerAmount: t.Optional(t.Number()), // จํานวนผู้โดยสาร
   notes: t.Optional(t.Union([t.Null(), t.String()])), // หมายเหตุเพิมเติม
-  startDate: t.Date(), // วันทีเริมใชรถ
-  endDate: t.Date(), // วันทีสนสุดและคืนรถ
+  startDate: t.Optional(t.Date()), // วันทีเริมใชรถ
+  endDate: t.Optional(t.Date()), // วันทีสนสุดและคืนรถ
   passenger: t.Optional(t.Union([t.Null(), t.Array(t.String())])), // ผู้โดยสาร
   approve: t.Optional(t.Union([t.Boolean(), t.Null()])),
   pdfUrl: t.Optional(t.Union([t.String(), t.Null()])),
