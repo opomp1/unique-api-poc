@@ -11,3 +11,5 @@ config.json
 
 /uploads/pdfs
 /data/minio
+
+dist/

@@ -2,10 +2,12 @@ import { t } from 'elysia';
 
 export const EmployeeSchema = t.Object({
   id: t.Unknown(),
-  name: t.String(),
-  tel: t.String(),
-  department: t.String(), // ฝ่าย
-  section: t.String(), // แผนก
+  name: t.Optional(t.String()),
+  tel: t.Optional(t.String()),
+  lineUserId: t.String(),
+  responseToken: t.Optional(t.String()),
+  department: t.Optional(t.String()), // ฝ่าย
+  section: t.Optional(t.String()), // แผนก
   createdAt: t.Date(),
   updatedAt: t.Date(),
 });
