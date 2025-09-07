@@ -11,18 +11,20 @@ const minioClient = new Client({
 
 const bucketName = env.MINIO_BUCKET_NAME || 'pdf';
 
-const minioConnectionString = (() => {
-  const protocol = env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
-  const url = env.MINIO_PORT
-    ? `${env.MINIO_URL}:${env.MINIO_PORT}`
-    : env.MINIO_URL;
-  return `${protocol}://${url || 'localhost:9000'}`;
- 
-})();
+// const minioConnectionString = (() => {
+//   const protocol = env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
+//   const url = env.MINIO_PORT
+//     ? `${env.MINIO_URL}:${env.MINIO_PORT}`
+//     : env.MINIO_URL;
+//   return `${protocol}://${url || 'localhost:9000'}`;
+
+// })();
 
 export async function uploadPdf(pdfBuffer: Buffer) {
   const filename = `${randomUUIDv7()}.pdf`;
   const filepath = `/${bucketName}/${filename}`;
+  const generatedFilePath =
+    `${env.MINIO_EXTERNAL_URL}` || 'https://unique-poc-minio.codesook.dev';
 
   await minioClient.putObject(
     bucketName,
@@ -35,7 +37,8 @@ export async function uploadPdf(pdfBuffer: Buffer) {
   return {
     filename,
     filepath,
-    fileFullPath: `${minioConnectionString}${filepath}`,
+    // fileFullPath: `${minioConnectionString}${filepath}`,
+    fileFullPath: `${generatedFilePath}${filepath}`,
     size: pdfBuffer.length,
   };
 }
