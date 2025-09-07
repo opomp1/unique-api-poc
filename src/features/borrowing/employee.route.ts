@@ -31,8 +31,8 @@ export const employeeRoutes = new Elysia({
         }),
       },
       detail: {
-        summary: "Get all employees"
-      }
+        summary: 'Get all employees',
+      },
     }
   )
   .get(
@@ -49,8 +49,8 @@ export const employeeRoutes = new Elysia({
         }
         return response;
       } catch (error) {
-        console.log('Fail to get by id: ', error);
-        return { message: 'Failed to get all' };
+        console.log('Fail to get by ID: ', error);
+        return { message: 'Failed to get by ID' };
       }
     },
     {
@@ -67,8 +67,51 @@ export const employeeRoutes = new Elysia({
         }),
       },
       detail: {
-        summary: "Get employee by ID"
+        summary: 'Get employee by ID',
+      },
+    }
+  )
+  .get(
+    '/by-line-id/:lineUserId',
+    async ({ params, set }) => {
+      const db = await getDb();
+      try {
+        const response = await db.query<[EmployeeSchema.EmployeeSchema[]]>(
+          'SELECT * FROM Employee WHERE lineUserId = $lineUserId LIMIT 1',
+          {
+            lineUserId: params.lineUserId,
+          }
+        );
+
+        if (!response[0] || response[0].length === 0) {
+          set.status = 404;
+          return { message: 'Employee not found' };
+        }
+
+        return response[0][0];
+      } catch (error) {
+        console.log('Fail to get by Line ID: ', error);
+        set.status = 500;
+        return { message: 'Failed to get Line ID' };
       }
+    },
+    {
+      params: t.Object({
+        lineUserId: t.String(),
+      }),
+      response: {
+        200: EmployeeSchema.EmployeeSchema,
+        404: t.Object({
+          message: t.Literal('Employee not found'),
+        }),
+        500: t.Object({
+          message: t.String(),
+        }),
+      },
+      detail: {
+        summary: 'Get employee by Line User ID',
+      },
+      tags: ['Employee By Line ID'],
     }
   )
   .post(
@@ -104,12 +147,12 @@ export const employeeRoutes = new Elysia({
         201: EmployeeSchema.EmployeeSchema,
         500: t.Object({
           message: t.String(),
-          error: t.Unknown()
-        })
+          error: t.Unknown(),
+        }),
       },
       detail: {
-        summary: "Create new employee"
-      }
+        summary: 'Create new employee',
+      },
     }
   )
   .put(
@@ -162,8 +205,8 @@ export const employeeRoutes = new Elysia({
         }),
       },
       detail: {
-        summary: "Update employee data"
-      }
+        summary: 'Update employee data',
+      },
     }
   )
   .delete(
@@ -199,7 +242,7 @@ export const employeeRoutes = new Elysia({
         }),
       },
       detail: {
-        summary: "Delete employee"
-      }
+        summary: 'Delete employee',
+      },
     }
   );
