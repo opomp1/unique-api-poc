@@ -258,7 +258,7 @@ export const reservationRoutes = new Elysia({
           id: prevReservation.id,
           requesterId: prevReservation.requesterId,
           lineUserId: body.lineUserId ?? prevReservation.lineUserId,
-          projectName: body.projectName ?? prevReservation.projectName,
+          projectName: body.projectName,
           purpose: body.purpose ?? prevReservation.purpose,
           passengerAmount:
             body.passengerAmount ?? prevReservation.passengerAmount,

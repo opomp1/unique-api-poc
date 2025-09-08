@@ -210,6 +210,35 @@ export const employeeRoutes = new Elysia({
     }
   )
   .delete(
+    '/',
+    async () => {
+      const db = await getDb();
+      try {
+        await db.query('DELETE FROM Employee');
+        await db.query('DELETE FROM Reservation');
+
+        return { message: 'All Employees and Reservations are deleted' };
+      } catch (error) {
+        console.log('Failed to delete: ', error);
+        return { message: 'Failed to delete', error };
+      }
+    },
+    {
+      response: {
+        200: t.Object({
+          message: t.String(),
+        }),
+        500: t.Object({
+          message: t.String(),
+          error: t.Unknown(),
+        }),
+      },
+      detail: {
+        summary: 'Delete all Employees and Reservations',
+      },
+    }
+  )
+  .delete(
     '/:id',
     async ({ params, set }) => {
       const db = await getDb();
@@ -242,7 +271,7 @@ export const employeeRoutes = new Elysia({
         }),
       },
       detail: {
-        summary: 'Delete employee',
+        summary: 'Delete employee by ID',
       },
     }
   );
