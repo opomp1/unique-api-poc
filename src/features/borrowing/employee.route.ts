@@ -111,7 +111,7 @@ export const employeeRoutes = new Elysia({
       detail: {
         summary: 'Get employee by Line User ID',
       },
-      tags: ['Employee By Line ID'],
+      tags: ['By Line ID'],
     }
   )
   .post(

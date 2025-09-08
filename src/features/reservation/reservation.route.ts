@@ -101,7 +101,7 @@ export const reservationRoutes = new Elysia({
         return response;
       } catch (error) {
         console.log('Fail to get by id: ', error);
-        return { message: 'Failed to get all', error };
+        return { message: 'Failed to get by id', error };
       }
     },
     {
@@ -123,6 +123,51 @@ export const reservationRoutes = new Elysia({
       },
     }
   )
+  .get(
+    'by-line-id/:lineUserId',
+    async ({ params, set }) => {
+      const db = await getDb();
+      try {
+        const response = await db.query<
+          [ReservationSchema.ReservationSchema[]]
+        >(
+          'SELECT * FROM Reservation WHERE lineUserId = $lineUserId ORDER BY createdAt DESC LIMIT 1',
+          { lineUserId: params.lineUserId }
+        );
+        if (!response[0] || response[0].length === 0) {
+          set.status = 404;
+          return { message: 'Reservation not found' };
+        }
+
+        return response[0][0];
+      } catch (error) {
+        console.log('Fail to get reservation by Line id: ', error);
+        return { message: 'Failed to get resservation by Line id', error };
+      }
+    },
+    {
+      params: t.Object({
+        lineUserId: t.String(),
+      }),
+      response: {
+        200: ReservationSchema.ReservationSchema,
+        400: t.Object({
+          message: t.String(),
+        }),
+        404: t.Object({
+          message: t.String(),
+        }),
+        500: t.Object({
+          message: t.String(),
+          error: t.Unknown(),
+        }),
+      },
+      detail: {
+        summary: 'Get latest reservation by Line ID',
+      },
+      tags: ['By Line ID'],
+    }
+  )
   .post(
     '/:employeeId',
     async ({ body, params, set }) => {
@@ -140,24 +185,25 @@ export const reservationRoutes = new Elysia({
         }
 
         const inputDate = {
+          ...body,
           requesterId: params.employeeId,
 
-          lineUserId: body.lineUserId,
-          projectName: body.projectName,
-          purpose: body.purpose,
-          passengerAmount: body.passengerAmount,
-          notes: body.notes,
-          startDate: body.startDate,
-          endDate: body.endDate,
-          passenger: body.passenger ?? null,
-          approve: body.approve ?? null,
-          pdfUrl: body.pdfUrl ?? null,
-          car: body.car ?? null,
+          // lineUserId: body.lineUserId,
+          // projectName: body.projectName,
+          // purpose: body.purpose,
+          // passengerAmount: body.passengerAmount,
+          // notes: body.notes,
+          // startDate: body.startDate,
+          // endDate: body.endDate,
+          // passenger: body.passenger ?? null,
+          // approve: body.approve ?? null,
+          // pdfUrl: body.pdfUrl ?? null,
+          // car: body.car ?? null,
 
-          isSelfDrive: body.isSelfDrive,
-          driverName: body.driverName,
-          driverEmployeeId: body.driverEmployeeId,
-          driverTel: body.driverTel,
+          // isSelfDrive: body.isSelfDrive,
+          // driverName: body.driverName,
+          // driverEmployeeId: body.driverEmployeeId,
+          // driverTel: body.driverTel,
 
           createdAt: new Date(),
           updatedAt: new Date(),
