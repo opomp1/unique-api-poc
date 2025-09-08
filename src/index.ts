@@ -2,6 +2,7 @@ import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import { employeeRoutes } from './features/borrowing/employee.route';
 import { pdfRoutes } from './features/pdf-generation/pdf.routes';
+import { replyTokenRoutes } from './features/replyToken/reply-token.route';
 import { reservationRoutes } from './features/reservation/reservation.route';
 
 const app = new Elysia()
@@ -14,6 +15,7 @@ const app = new Elysia()
   .use(employeeRoutes)
   .use(reservationRoutes)
   .use(pdfRoutes)
+  .use(replyTokenRoutes)
   .listen(3000);
 
 console.log(
