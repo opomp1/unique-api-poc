@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+
 import { readFileSync } from 'node:fs';
 import type { Font } from '@pdfme/common';
 import { generate } from '@pdfme/generator';
@@ -7,6 +8,7 @@ import {
   checkbox,
   image,
   multiVariableText,
+  table,
   text,
 } from '@pdfme/schemas';
 import type { InputSchema } from 'elysia';
@@ -38,6 +40,7 @@ export async function generateAndSavePDFV2(
       'QR Code': barcodes.qrcode,
       Image: image,
       Checkbox: checkbox,
+      Table: table,
     };
 
     // Convert inputs to strings (PDFme does not except number and maybe more...)
