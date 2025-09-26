@@ -13,7 +13,7 @@ type DbConfig = {
 
 // Define the default database configuration
 const DEFAULT_CONFIG: DbConfig = {
-  region: env.AWS_REGION || 'us-east-1',
+  region: env.AWS_REGION || 'ap-southeast-7',
   endpoint: env.DYNAMODB_ENDPOINT || 'http://localhost:8000',
   credentials: {
     accessKeyId: env.AWS_ACCESS_KEY_ID || 'local',

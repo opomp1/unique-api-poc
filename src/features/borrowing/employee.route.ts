@@ -1,8 +1,16 @@
 /** biome-ignore-all lint/performance/noNamespaceImport: <explanation> */
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import Elysia, { t } from 'elysia';
 import { getDynamoDb } from '../../lib/dynamodb';
-import { PutCommand, GetCommand, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { TABLE_NAMES } from '../../lib/setup-tables';
 import * as EmployeeSchema from './employee.schema';
 
@@ -15,9 +23,11 @@ export const employeeRoutes = new Elysia({
     async () => {
       const db = getDynamoDb();
       try {
-        const result = await db.send(new ScanCommand({
-          TableName: TABLE_NAMES.EMPLOYEE
-        }));
+        const result = await db.send(
+          new ScanCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+          })
+        );
         return result.Items || [];
       } catch (error) {
         console.log('fail to get all: ', error);
@@ -41,10 +51,12 @@ export const employeeRoutes = new Elysia({
     async ({ params, set }) => {
       const db = getDynamoDb();
       try {
-        const result = await db.send(new GetCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Key: { id: params.id }
-        }));
+        const result = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Key: { id: params.id },
+          })
+        );
         if (!result.Item) {
           set.status = 404;
           return { message: 'Employee Not found' };
@@ -78,15 +90,17 @@ export const employeeRoutes = new Elysia({
     async ({ params, set }) => {
       const db = getDynamoDb();
       try {
-        const result = await db.send(new QueryCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          IndexName: 'lineUserId-index',
-          KeyConditionExpression: 'lineUserId = :lineUserId',
-          ExpressionAttributeValues: {
-            ':lineUserId': params.lineUserId
-          },
-          Limit: 1
-        }));
+        const result = await db.send(
+          new QueryCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            IndexName: 'lineUserId-index',
+            KeyConditionExpression: 'lineUserId = :lineUserId',
+            ExpressionAttributeValues: {
+              ':lineUserId': params.lineUserId,
+            },
+            Limit: 1,
+          })
+        );
 
         if (!result.Items || result.Items.length === 0) {
           set.status = 404;
@@ -136,10 +150,12 @@ export const employeeRoutes = new Elysia({
       };
 
       try {
-        await db.send(new PutCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Item: inputData
-        }));
+        await db.send(
+          new PutCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Item: inputData,
+          })
+        );
         return inputData;
       } catch (error) {
         console.error('Failed to create : ', error);
@@ -165,10 +181,12 @@ export const employeeRoutes = new Elysia({
     async ({ params, body, set }) => {
       const db = getDynamoDb();
       try {
-        const getResult = await db.send(new GetCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Key: { id: params.id }
-        }));
+        const getResult = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Key: { id: params.id },
+          })
+        );
 
         if (!getResult.Item) {
           set.status = 404;
@@ -186,10 +204,12 @@ export const employeeRoutes = new Elysia({
           updatedAt: new Date().toISOString(),
         };
 
-        await db.send(new PutCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Item: inputData
-        }));
+        await db.send(
+          new PutCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Item: inputData,
+          })
+        );
         return inputData;
       } catch (error) {
         console.log('Failed to update: ', error);
@@ -221,25 +241,33 @@ export const employeeRoutes = new Elysia({
     async () => {
       const db = getDynamoDb();
       try {
-        const employeesResult = await db.send(new ScanCommand({
-          TableName: TABLE_NAMES.EMPLOYEE
-        }));
-        const reservationsResult = await db.send(new ScanCommand({
-          TableName: 'Reservation'
-        }));
+        const employeesResult = await db.send(
+          new ScanCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+          })
+        );
+        const reservationsResult = await db.send(
+          new ScanCommand({
+            TableName: 'Reservation',
+          })
+        );
 
         for (const employee of employeesResult.Items || []) {
-          await db.send(new DeleteCommand({
-            TableName: TABLE_NAMES.EMPLOYEE,
-            Key: { id: employee.id }
-          }));
+          await db.send(
+            new DeleteCommand({
+              TableName: TABLE_NAMES.EMPLOYEE,
+              Key: { id: employee.id },
+            })
+          );
         }
 
         for (const reservation of reservationsResult.Items || []) {
-          await db.send(new DeleteCommand({
-            TableName: 'Reservation',
-            Key: { id: reservation.id }
-          }));
+          await db.send(
+            new DeleteCommand({
+              TableName: 'Reservation',
+              Key: { id: reservation.id },
+            })
+          );
         }
 
         return { message: 'All Employees and Reservations are deleted' };
@@ -268,20 +296,24 @@ export const employeeRoutes = new Elysia({
     async ({ params, set }) => {
       const db = getDynamoDb();
       try {
-        const getResult = await db.send(new GetCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Key: { id: params.id }
-        }));
+        const getResult = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Key: { id: params.id },
+          })
+        );
 
         if (!getResult.Item) {
           set.status = 404;
           return { message: 'Employee not found' };
         }
 
-        await db.send(new DeleteCommand({
-          TableName: TABLE_NAMES.EMPLOYEE,
-          Key: { id: params.id }
-        }));
+        await db.send(
+          new DeleteCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Key: { id: params.id },
+          })
+        );
 
         return getResult.Item;
       } catch (error) {

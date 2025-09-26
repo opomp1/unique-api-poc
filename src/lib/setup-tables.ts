@@ -1,4 +1,8 @@
-import { CreateTableCommand, DescribeTableCommand } from '@aws-sdk/client-dynamodb';
+/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+import {
+  CreateTableCommand,
+  DescribeTableCommand,
+} from '@aws-sdk/client-dynamodb';
 import { getDynamoDb } from './dynamodb';
 
 export const TABLE_NAMES = {
@@ -8,7 +12,7 @@ export const TABLE_NAMES = {
 } as const;
 
 export async function createTablesIfNotExists() {
-  const dynamodb = getDynamoDb();
+   getDynamoDb();
 
   try {
     await createEmployeeTable();
