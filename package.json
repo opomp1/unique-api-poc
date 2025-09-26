@@ -3,8 +3,11 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build.ts"
+    "dev": "bun run env:dev:dc && bun run --watch src/index.ts",
+    "build": "bun build.ts",
+    "dotenvx": "dotenvx",
+    "env:dev:dc": "dotenvx decrypt",
+    "env:dev:ec": "dotenvx encrypt"
   },
   "dependencies": {
     "@elysiajs/swagger": "^1.3.1",
@@ -17,8 +20,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
+    "@dotenvx/dotenvx": "^1.51.0",
     "bun-types": "latest",
-    "lefthook": "^1.12.3",
+    "lefthook": "^1.13.4",
     "ultracite": "5.2.17"
   },
   "module": "src/index.js"

@@ -44,7 +44,7 @@ package-lock.json
 surrealdb
 
 dist
-.env
+.env.keys
 
 /uploads/pdfs
 /data/minio
