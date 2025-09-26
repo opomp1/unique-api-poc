@@ -11,8 +11,8 @@ export const ReservationSchema = t.Object({
   passengerAmount: t.Optional(t.Number()), // จํานวนผู้โดยสาร
   notes: t.Optional(t.String()), // หมายเหตุเพิมเติม
   notesFromOfficer: t.Optional(t.String()),
-  startDate: t.Optional(t.Date()), // วันทีเริมใชรถ
-  endDate: t.Optional(t.Date()), // วันทีสนสุดและคืนรถ
+  startDate: t.Optional(t.String({ format: 'date-time' })), // วันทีเริมใชรถ
+  endDate: t.Optional(t.String({ format: 'date-time' })), // วันทีสนสุดและคืนรถ
   passenger: t.Optional(t.Array(t.String())), // ผู้โดยสาร
   approve: t.Optional(t.Union([t.Boolean(), t.Null()])),
   pdfUrl: t.Optional(t.String()),
@@ -25,8 +25,8 @@ export const ReservationSchema = t.Object({
   driverEmployeeId: t.Optional(t.String()),
   driverTel: t.Optional(t.String()),
 
-  createdAt: t.Date(),
-  updatedAt: t.Date(),
+  createdAt: t.Union([t.Date(), t.String()]),
+  updatedAt: t.Union([t.Date(), t.String()]),
 });
 
 export type ReservationSchema = typeof ReservationSchema.static;

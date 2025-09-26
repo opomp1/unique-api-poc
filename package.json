@@ -11,6 +11,8 @@
     "postinstall": "git config --local core.editor cat"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.896.0",
+    "@aws-sdk/lib-dynamodb": "^3.896.0",
     "@elysiajs/swagger": "^1.3.1",
     "@pdfme/common": "^5.4.2",
     "@pdfme/generator": "^5.4.2",

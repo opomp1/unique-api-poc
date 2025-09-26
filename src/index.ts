@@ -5,6 +5,10 @@ import { inputsRoutes } from './features/inputs/inputs.route';
 import { pdfRoutes } from './features/pdf-generation/pdf.routes';
 import { replyTokenRoutes } from './features/replyToken/reply-token.route';
 import { reservationRoutes } from './features/reservation/reservation.route';
+import { createTablesIfNotExists } from './lib/setup-tables';
+
+// Initialize DynamoDB tables
+await createTablesIfNotExists();
 
 const app = new Elysia()
   .use(

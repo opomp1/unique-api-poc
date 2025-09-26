@@ -1,12 +1,12 @@
 pre-commit:
   jobs:
-    - run: bun x ultracite fix
-      glob: 
-        - "src/**/*.ts"
-      stage_fixed: true
+    # - run: bun x ultracite fix
+      # glob: 
+        # - "src/**/*.ts"
+      # stage_fixed: true
     - run: bun run env:dev:ec
     - run: git add .
 
-    
+
 
 

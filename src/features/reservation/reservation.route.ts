@@ -1,8 +1,17 @@
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 /** biome-ignore-all lint/performance/noNamespaceImport: <explanation> */
+
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import Elysia, { t } from 'elysia';
-import { StringRecordId } from 'surrealdb';
-import { getDb } from '../../lib/database';
+import { getDynamoDb } from '../../lib/dynamodb';
+import { TABLE_NAMES } from '../../lib/setup-tables';
 import * as ReservationSchema from './reservation.schema';
 
 export const reservationRoutes = new Elysia({
@@ -13,42 +22,60 @@ export const reservationRoutes = new Elysia({
     '/',
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
     async ({ query }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
-        let reservation: ReservationSchema.ReservationSReservationArraySchema;
+        let reservation: any[];
 
         const hasFilter =
           query.requesterId ||
           query.approve !== undefined ||
           query.isSelfDrive !== undefined;
-        if (hasFilter) {
-          let queryString = 'SELECT * FROM Reservation WHERE 1=1';
-          const queryParams: Record<string, string | boolean | undefined> = {};
 
+        if (hasFilter) {
           if (query.requesterId) {
-            queryString += ' AND requesterId = $requesterId';
-            queryParams.requesterId = query.requesterId;
+            const result = await db.send(
+              new QueryCommand({
+                TableName: TABLE_NAMES.RESERVATION,
+                IndexName: 'requesterId-index',
+                KeyConditionExpression: 'requesterId = :requesterId',
+                ExpressionAttributeValues: {
+                  ':requesterId': query.requesterId,
+                },
+              })
+            );
+            reservation = result.Items || [];
+          } else {
+            const result = await db.send(
+              new ScanCommand({
+                TableName: TABLE_NAMES.RESERVATION,
+              })
+            );
+            reservation = result.Items || [];
           }
 
           if (query.approve !== undefined) {
-            queryString += ' AND approve = $approve';
-            queryParams.approve = query.approve;
+            reservation = reservation.filter(
+              (r) => r.approve === query.approve
+            );
           }
 
           if (query.isSelfDrive !== undefined) {
-            queryString += ' AND isSelfDrive = $isSelfDrive';
-            queryParams.isSelfDrive = query.isSelfDrive;
+            reservation = reservation.filter(
+              (r) => r.isSelfDrive === query.isSelfDrive
+            );
           }
 
-          queryString += ' ORDER BY createdAt DESC';
-
-          const result = await db.query<
-            [ReservationSchema.ReservationSReservationArraySchema]
-          >(queryString, queryParams);
-          reservation = result[0] || [];
+          reservation.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         } else {
-          reservation =
-            await db.select<ReservationSchema.ReservationSchema>('Reservation');
+          const result = await db.send(
+            new ScanCommand({
+              TableName: TABLE_NAMES.RESERVATION,
+            })
+          );
+          reservation = result.Items || [];
         }
         const totalItems = reservation.length;
         return {
@@ -89,16 +116,19 @@ export const reservationRoutes = new Elysia({
   .get(
     '/:id',
     async ({ params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
-        const response = await db.select<ReservationSchema.ReservationSchema>(
-          new StringRecordId(params.id)
+        const result = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Key: { id: params.id },
+          })
         );
-        if (!response) {
+        if (!result.Item) {
           set.status = 404;
           return { message: 'Reservation Not found' };
         }
-        return response;
+        return result.Item;
       } catch (error) {
         console.log('Fail to get by id: ', error);
         return { message: 'Failed to get by id', error };
@@ -126,20 +156,26 @@ export const reservationRoutes = new Elysia({
   .get(
     'by-line-id/:lineUserId',
     async ({ params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
-        const response = await db.query<
-          [ReservationSchema.ReservationSchema[]]
-        >(
-          'SELECT * FROM Reservation WHERE lineUserId = $lineUserId ORDER BY createdAt DESC LIMIT 1',
-          { lineUserId: params.lineUserId }
+        const result = await db.send(
+          new QueryCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            IndexName: 'lineUserId-index',
+            KeyConditionExpression: 'lineUserId = :lineUserId',
+            ExpressionAttributeValues: {
+              ':lineUserId': params.lineUserId,
+            },
+            Limit: 1,
+            ScanIndexForward: false,
+          })
         );
-        if (!response[0] || response[0].length === 0) {
+        if (!result.Items || result.Items.length === 0) {
           set.status = 404;
           return { message: 'Reservation not found' };
         }
 
-        return response[0][0];
+        return result.Items[0];
       } catch (error) {
         console.log('Fail to get reservation by Line id: ', error);
         return { message: 'Failed to get resservation by Line id', error };
@@ -171,49 +207,44 @@ export const reservationRoutes = new Elysia({
   .post(
     '/:employeeId',
     async ({ body, params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
 
       const requesterId = params.employeeId;
 
       try {
         console.log('start');
-        const requesterUser = await db.select(new StringRecordId(requesterId));
-        console.log('requesterUser', requesterUser);
-        if (!requesterUser) {
+        const requesterUser = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.EMPLOYEE,
+            Key: { id: requesterId },
+          })
+        );
+        console.log('requesterUser', requesterUser.Item);
+        if (!requesterUser.Item) {
           set.status = 404;
           return { message: 'Requester employee not found.' };
         }
+        console.log('Received body:', JSON.stringify(body, null, 2));
 
-        const inputDate = {
+        const inputData = {
           ...body,
+          id: crypto.randomUUID(),
           requesterId: params.employeeId,
-
-          // lineUserId: body.lineUserId,
-          // projectName: body.projectName,
-          // purpose: body.purpose,
-          // passengerAmount: body.passengerAmount,
-          // notes: body.notes,
-          // startDate: body.startDate,
-          // endDate: body.endDate,
-          // passenger: body.passenger ?? null,
-          // approve: body.approve ?? null,
-          // pdfUrl: body.pdfUrl ?? null,
-          // car: body.car ?? null,
-
-          // isSelfDrive: body.isSelfDrive,
-          // driverName: body.driverName,
-          // driverEmployeeId: body.driverEmployeeId,
-          // driverTel: body.driverTel,
-
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
-        const employee =
-          await db.create<ReservationSchema.CreateReservationSchema>(
-            'Reservation',
-            inputDate
-          );
-        return employee;
+        console.log(
+          'inputData before DynamoDB:',
+          JSON.stringify(inputData, null, 2)
+        );
+
+        await db.send(
+          new PutCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Item: inputData,
+          })
+        );
+        return inputData;
       } catch (error) {
         console.error('Failed to create : ', error);
         return { message: 'Failed to create', error };
@@ -243,18 +274,23 @@ export const reservationRoutes = new Elysia({
     '/:id',
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: It said it's too long
     async ({ body, params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
-        const prevReservation =
-          await db.select<ReservationSchema.ReservationSchema>(
-            new StringRecordId(params.id)
-          );
+        const getResult = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Key: { id: params.id },
+          })
+        );
 
-        if (!prevReservation) {
+        if (!getResult.Item) {
           set.status = 404;
           return { message: 'Reservation not found' };
         }
-        const inputDate = {
+
+        const prevReservation = getResult.Item;
+        console.log('Previous reservation:', prevReservation);
+        const inputData: ReservationSchema.ReservationSchema = {
           id: prevReservation.id,
           requesterId: prevReservation.requesterId,
           lineUserId: body.lineUserId ?? prevReservation.lineUserId,
@@ -279,17 +315,21 @@ export const reservationRoutes = new Elysia({
             body.driverEmployeeId ?? prevReservation.driverEmployeeId,
           driverTel: body.driverTel ?? prevReservation.driverTel,
 
-          createdAt: prevReservation.createdAt ?? new Date(),
-          updatedAt: new Date(),
+          createdAt: prevReservation.createdAt ?? new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
-        const updatedReservation =
-          await db.update<ReservationSchema.ReservationSchema>(
-            new StringRecordId(params.id),
-            inputDate
-          );
+        console.log('inputData before DynamoDB:', inputData);
 
-        return updatedReservation;
+        const data = await db.send(
+          new PutCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Item: inputData,
+          })
+        );
+        console.log('Update result: ', data);
+
+        return inputData;
       } catch (error) {
         console.error('Failed to update : ', error);
         return { message: 'Failed to update', error };
@@ -318,17 +358,28 @@ export const reservationRoutes = new Elysia({
   .delete(
     '/:id',
     async ({ params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
-        const reservation =
-          await db.delete<ReservationSchema.ReservationSchema>(
-            new StringRecordId(params.id)
-          );
-        if (!reservation) {
+        const getResult = await db.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Key: { id: params.id },
+          })
+        );
+
+        if (!getResult.Item) {
           set.status = 404;
           return { message: 'Reservation not found' };
         }
-        return reservation;
+
+        await db.send(
+          new DeleteCommand({
+            TableName: TABLE_NAMES.RESERVATION,
+            Key: { id: params.id },
+          })
+        );
+
+        return { success: true };
       } catch (error) {
         console.error('Failed to delete : ', error);
         return { message: 'Failed to delete', error };
@@ -339,7 +390,9 @@ export const reservationRoutes = new Elysia({
         id: t.String(),
       }),
       response: {
-        200: ReservationSchema.ReservationSchema,
+        200: t.Object({
+          success: t.Boolean(),
+        }),
         404: t.Object({
           message: t.String(),
         }),

@@ -1,7 +1,8 @@
 /** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import Elysia, { t } from 'elysia';
-import { StringRecordId } from 'surrealdb';
-import { getDb } from '../../lib/database';
+import { getDynamoDb } from '../../lib/dynamodb';
+import { PutCommand, GetCommand, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { TABLE_NAMES } from '../../lib/setup-tables';
 import {
   ReplyTokenSchema,
   type UpdateReplyTokenSchema,
@@ -14,39 +15,49 @@ export const replyTokenRoutes = new Elysia({
   .put(
     '/:lineUserId',
     async ({ params, body }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
         const { lineUserId } = params;
         const { replyToken } = body;
-        const existingToken = await db.query<[ReplyTokenSchema[]]>(
-          'SELECT * FROM ReplyToken WHERE lineUserId = $lineUserId LIMIT 1',
-          { lineUserId }
-        );
-        if (!existingToken[0] || existingToken[0].length === 0) {
-          const response = await db.create<UpdateReplyTokenSchema>(
-            'ReplyToken',
-            {
-              lineUserId,
-              replyToken,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }
-          );
-          return response[0];
+        const existingTokenResult = await db.send(new QueryCommand({
+          TableName: TABLE_NAMES.REPLY_TOKEN,
+          IndexName: 'lineUserId-index',
+          KeyConditionExpression: 'lineUserId = :lineUserId',
+          ExpressionAttributeValues: {
+            ':lineUserId': lineUserId
+          },
+          Limit: 1
+        }));
+
+        if (!existingTokenResult.Items || existingTokenResult.Items.length === 0) {
+          const newToken = {
+            id: crypto.randomUUID(),
+            lineUserId,
+            replyToken,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          await db.send(new PutCommand({
+            TableName: TABLE_NAMES.REPLY_TOKEN,
+            Item: newToken
+          }));
+          return newToken;
         }
-        const prevReplyToken = existingToken[0][0];
-        const recordId = String(prevReplyToken.id);
+
+        const prevReplyToken = existingTokenResult.Items[0];
         const inputData = {
+          id: prevReplyToken.id,
           lineUserId,
           replyToken,
-          createdAt: prevReplyToken.createdAt ?? new Date(),
-          updatedAt: new Date(),
+          createdAt: prevReplyToken.createdAt ?? new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
-        const response = await db.update<UpdateReplyTokenSchema>(
-          new StringRecordId(recordId),
-          inputData
-        );
-        return response;
+
+        await db.send(new PutCommand({
+          TableName: TABLE_NAMES.REPLY_TOKEN,
+          Item: inputData
+        }));
+        return inputData;
       } catch (error) {
         console.log('Failed to update reply token: ', error);
         return { message: 'Failed to update reply token', error };
@@ -75,19 +86,25 @@ export const replyTokenRoutes = new Elysia({
   .get(
     '/:lineUserId',
     async ({ params, set }) => {
-      const db = await getDb();
+      const db = getDynamoDb();
       try {
         const { lineUserId } = params;
-        const response = await db.query<[ReplyTokenSchema[]]>(
-          'SELECT * FROM ReplyToken WHERE lineUserId = $lineUserId LIMIT 1',
-          { lineUserId }
-        );
-        if (!response[0] || response[0].length === 0) {
+        const result = await db.send(new QueryCommand({
+          TableName: TABLE_NAMES.REPLY_TOKEN,
+          IndexName: 'lineUserId-index',
+          KeyConditionExpression: 'lineUserId = :lineUserId',
+          ExpressionAttributeValues: {
+            ':lineUserId': lineUserId
+          },
+          Limit: 1
+        }));
+
+        if (!result.Items || result.Items.length === 0) {
           set.status = 404;
           return { message: 'Reply token not found' };
         }
-        const existingToken = response[0][0];
-        return existingToken;
+
+        return result.Items[0];
       } catch (error) {
         console.log('Failed to get reply token: ', error);
         return { message: 'Failed to get reply token', error };
