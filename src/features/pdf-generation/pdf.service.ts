@@ -12,7 +12,8 @@ import {
   text,
 } from '@pdfme/schemas';
 import type { InputSchema } from 'elysia';
-import { uploadPdf } from '../../providers/minio/minio.provider';
+// import { uploadPdf } from '../../providers/minio/minio.provider';
+import { uploadPdftoS3 } from '../../providers/s3/s3.provider';
 
 const font: Font = {
   Sarabun: {
@@ -58,7 +59,8 @@ export async function generateAndSavePDFV2(
       options: { font },
     });
 
-    const uploadResult = await uploadPdf(Buffer.from(pdf));
+    // const uploadResult = await uploadPdf(Buffer.from(pdf));
+    const uploadResult = await uploadPdftoS3(Buffer.from(pdf));
 
     return {
       success: true,
