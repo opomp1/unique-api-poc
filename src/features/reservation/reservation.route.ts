@@ -212,7 +212,11 @@ export const reservationRoutes = new Elysia({
       const requesterId = params.employeeId;
 
       try {
-        console.log('start');
+        if (!body.lineUserId || body.lineUserId.trim() === '') {
+          set.status = 400;
+          return { message: 'Please include lineUserId' };
+        }
+
         const requesterUser = await db.send(
           new GetCommand({
             TableName: TABLE_NAMES.EMPLOYEE,
@@ -288,12 +292,16 @@ export const reservationRoutes = new Elysia({
           return { message: 'Reservation not found' };
         }
 
+        const isBodyLineIdEmpty = !body.lineUserId || body.lineUserId.trim() === '';
+
         const prevReservation = getResult.Item;
         console.log('Previous reservation:', prevReservation);
         const inputData: ReservationSchema.ReservationSchema = {
           id: prevReservation.id,
           requesterId: prevReservation.requesterId,
-          lineUserId: body.lineUserId ?? prevReservation.lineUserId,
+          lineUserId: isBodyLineIdEmpty
+            ? prevReservation.lineUserId
+            : body.lineUserId,
           projectName: body.projectName,
           purpose: body.purpose ?? prevReservation.purpose,
           passengerAmount:

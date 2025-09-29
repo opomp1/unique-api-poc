@@ -6,7 +6,7 @@ temp/
 *.log
 
 # Ignore sensitive configuration files
-.env
+.env.keys
 config.json
 
 /uploads/pdfs

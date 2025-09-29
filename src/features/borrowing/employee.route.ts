@@ -135,7 +135,7 @@ export const employeeRoutes = new Elysia({
   )
   .post(
     '/',
-    async ({ body }) => {
+    async ({ body, set }) => {
       const db = getDynamoDb();
 
       const inputData = {
@@ -150,6 +150,10 @@ export const employeeRoutes = new Elysia({
       };
 
       try {
+        if (!body.lineUserId || body.lineUserId.trim() === '') {
+          set.status = 400;
+          return { message: 'Please include lineUserId' };
+        }
         await db.send(
           new PutCommand({
             TableName: TABLE_NAMES.EMPLOYEE,
@@ -193,11 +197,16 @@ export const employeeRoutes = new Elysia({
           return { message: 'Employee not found' };
         }
 
+        const isBodyLineIdEmpty =
+          !body.lineUserId || body.lineUserId.trim() === '';
+
         const inputData = {
           id: params.id,
           name: body.name,
           tel: body.tel,
-          lineUserId: body.lineUserId,
+          lineUserId: isBodyLineIdEmpty
+            ? getResult.Item.lineUserId
+            : body.lineUserId,
           department: body.department,
           section: body.section,
           createdAt: getResult.Item.createdAt || new Date().toISOString(),
@@ -226,6 +235,7 @@ export const employeeRoutes = new Elysia({
         404: t.Object({
           message: t.Literal('Employee not found'),
         }),
+        // 422: t.Unknown,
         500: t.Object({
           message: t.String(),
           error: t.Optional(t.Any()),
