@@ -12,7 +12,7 @@ export const TABLE_NAMES = {
 } as const;
 
 export async function createTablesIfNotExists() {
-   getDynamoDb();
+  getDynamoDb();
 
   try {
     await createEmployeeTable();
@@ -29,29 +29,27 @@ async function createEmployeeTable() {
   const dynamodb = getDynamoDb();
 
   try {
-    await dynamodb.send(new DescribeTableCommand({ TableName: TABLE_NAMES.EMPLOYEE }));
+    await dynamodb.send(
+      new DescribeTableCommand({ TableName: TABLE_NAMES.EMPLOYEE })
+    );
     console.log(`Table ${TABLE_NAMES.EMPLOYEE} already exists`);
   } catch (error) {
     const createTableParams = {
       TableName: TABLE_NAMES.EMPLOYEE,
-      KeySchema: [
-        { AttributeName: 'id', KeyType: 'HASH' }
-      ],
+      KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
       AttributeDefinitions: [
         { AttributeName: 'id', AttributeType: 'S' },
-        { AttributeName: 'lineUserId', AttributeType: 'S' }
+        { AttributeName: 'lineUserId', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: 'lineUserId-index',
-          KeySchema: [
-            { AttributeName: 'lineUserId', KeyType: 'HASH' }
-          ],
+          KeySchema: [{ AttributeName: 'lineUserId', KeyType: 'HASH' }],
           Projection: { ProjectionType: 'ALL' },
-          BillingMode: 'PAY_PER_REQUEST'
-        }
+          BillingMode: 'PAY_PER_REQUEST',
+        },
       ],
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     };
 
     await dynamodb.send(new CreateTableCommand(createTableParams));
@@ -63,38 +61,34 @@ async function createReservationTable() {
   const dynamodb = getDynamoDb();
 
   try {
-    await dynamodb.send(new DescribeTableCommand({ TableName: TABLE_NAMES.RESERVATION }));
+    await dynamodb.send(
+      new DescribeTableCommand({ TableName: TABLE_NAMES.RESERVATION })
+    );
     console.log(`Table ${TABLE_NAMES.RESERVATION} already exists`);
   } catch (error) {
     const createTableParams = {
       TableName: TABLE_NAMES.RESERVATION,
-      KeySchema: [
-        { AttributeName: 'id', KeyType: 'HASH' }
-      ],
+      KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
       AttributeDefinitions: [
         { AttributeName: 'id', AttributeType: 'S' },
         { AttributeName: 'lineUserId', AttributeType: 'S' },
-        { AttributeName: 'requesterId', AttributeType: 'S' }
+        { AttributeName: 'requesterId', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: 'lineUserId-index',
-          KeySchema: [
-            { AttributeName: 'lineUserId', KeyType: 'HASH' }
-          ],
+          KeySchema: [{ AttributeName: 'lineUserId', KeyType: 'HASH' }],
           Projection: { ProjectionType: 'ALL' },
-          BillingMode: 'PAY_PER_REQUEST'
+          BillingMode: 'PAY_PER_REQUEST',
         },
         {
           IndexName: 'requesterId-index',
-          KeySchema: [
-            { AttributeName: 'requesterId', KeyType: 'HASH' }
-          ],
+          KeySchema: [{ AttributeName: 'requesterId', KeyType: 'HASH' }],
           Projection: { ProjectionType: 'ALL' },
-          BillingMode: 'PAY_PER_REQUEST'
-        }
+          BillingMode: 'PAY_PER_REQUEST',
+        },
       ],
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     };
 
     await dynamodb.send(new CreateTableCommand(createTableParams));
@@ -106,32 +100,32 @@ async function createReplyTokenTable() {
   const dynamodb = getDynamoDb();
 
   try {
-    await dynamodb.send(new DescribeTableCommand({ TableName: TABLE_NAMES.REPLY_TOKEN }));
+    await dynamodb.send(
+      new DescribeTableCommand({ TableName: TABLE_NAMES.REPLY_TOKEN })
+    );
     console.log(`Table ${TABLE_NAMES.REPLY_TOKEN} already exists`);
   } catch (error) {
     const createTableParams = {
       TableName: TABLE_NAMES.REPLY_TOKEN,
-      KeySchema: [
-        { AttributeName: 'id', KeyType: 'HASH' }
-      ],
+      KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
       AttributeDefinitions: [
         { AttributeName: 'id', AttributeType: 'S' },
-        { AttributeName: 'lineUserId', AttributeType: 'S' }
+        { AttributeName: 'lineUserId', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: 'lineUserId-index',
-          KeySchema: [
-            { AttributeName: 'lineUserId', KeyType: 'HASH' }
-          ],
+          KeySchema: [{ AttributeName: 'lineUserId', KeyType: 'HASH' }],
           Projection: { ProjectionType: 'ALL' },
-          BillingMode: 'PAY_PER_REQUEST'
-        }
+          BillingMode: 'PAY_PER_REQUEST',
+        },
       ],
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     };
 
     await dynamodb.send(new CreateTableCommand(createTableParams));
     console.log(`Table ${TABLE_NAMES.REPLY_TOKEN} created`);
   }
 }
+
+// createTablesIfNotExists();
